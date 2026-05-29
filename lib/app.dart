@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import 'features/auth/providers/auth_provider.dart';
 import 'routes/app_router.dart';
 
 class MyApp extends StatelessWidget {
@@ -7,12 +9,19 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'Ecommerce App',
-      debugShowCheckedModeBanner: false,
-      routerConfig: appRouter,
-      theme: ThemeData(
-        useMaterial3: true,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => AuthProvider(),
+        ),
+      ],
+      child: MaterialApp.router(
+        title: 'Ecommerce App',
+        debugShowCheckedModeBanner: false,
+        routerConfig: appRouter,
+        theme: ThemeData(
+          useMaterial3: true,
+        ),
       ),
     );
   }

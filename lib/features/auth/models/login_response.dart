@@ -9,7 +9,7 @@ class LoginResponse {
     Map<String, dynamic> json,
   ) {
     return LoginResponse(
-      token: json['data']['token'],
+      token: json['accessToken'],
     );
   }
 }
