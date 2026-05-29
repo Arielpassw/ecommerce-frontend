@@ -1,12 +1,14 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+import '../config/api_config.dart';
 
 class DioClient {
   static final Dio dio = Dio(
     BaseOptions(
-      baseUrl: dotenv.env['BASE_URL']!,
+      baseUrl: ApiConfig.baseUrl,
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
+
       headers: {
         'Content-Type': 'application/json',
       },

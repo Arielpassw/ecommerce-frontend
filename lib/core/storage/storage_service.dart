@@ -19,7 +19,7 @@ class StorageService {
     );
   }
 
-  static Future<void> deleteToken() async {
+  static Future<void> removeToken() async {
     await _storage.delete(
       key: 'jwt_token',
     );
