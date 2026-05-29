@@ -7,6 +7,13 @@ class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
 
   bool isLoading = false;
+  bool isAuthenticated = false;
+
+  Future<void> checkSession() async {
+    final token = await StorageService.getToken();
+    isAuthenticated = token != null;
+    notifyListeners();
+  }
 
   Future<void> login({
     required String email,
@@ -22,6 +29,7 @@ class AuthProvider extends ChangeNotifier {
       );
 
       await StorageService.saveToken(response.token);
+      isAuthenticated = true;
     } finally {
       isLoading = false;
       notifyListeners();
@@ -48,5 +56,11 @@ class AuthProvider extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<void> logout() async {
+    await StorageService.removeToken();
+    isAuthenticated = false;
+    notifyListeners();
   }
 }

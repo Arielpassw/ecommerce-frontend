@@ -23,4 +23,4 @@ final GoRouter appRouter = GoRouter(
           const HomeScreen(),
     ),
   ],
-);  
+);
