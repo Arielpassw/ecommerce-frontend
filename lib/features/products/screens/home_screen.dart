@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../auth/providers/auth_provider.dart';
+import '../../cart/providers/cart_provider.dart';
 import '../providers/products_provider.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -40,6 +41,12 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Productos'),
         actions: [
+          IconButton(
+            onPressed: () {
+              context.push('/cart');
+            },
+            icon: const Icon(Icons.shopping_cart),
+          ),
           IconButton(
             onPressed: logout,
             icon: const Icon(Icons.logout),
@@ -146,7 +153,27 @@ class _HomeScreenState extends State<HomeScreen> {
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
-                              onPressed: () {},
+                              onPressed: () async {
+                                await context
+                                    .read<CartProvider>()
+                                    .addToCart(
+                                      product.id,
+                                    );
+
+                                if (!context.mounted) {
+                                  return;
+                                }
+
+                                ScaffoldMessenger.of(
+                                  context,
+                                ).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Producto agregado',
+                                    ),
+                                  ),
+                                );
+                              },
                               child: const Text(
                                 'Agregar',
                               ),

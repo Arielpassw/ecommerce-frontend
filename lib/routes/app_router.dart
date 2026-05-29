@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../features/auth/screens/login_screen.dart';
 import '../features/auth/screens/register_screen.dart';
 import '../features/products/screens/home_screen.dart';
+import '../features/cart/screens/cart_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/login',
@@ -21,6 +22,11 @@ final GoRouter appRouter = GoRouter(
       path: '/home',
       builder: (context, state) =>
           const HomeScreen(),
+    ),
+    GoRoute(
+      path: '/cart',
+      builder: (context, state) =>
+          const CartScreen(),
     ),
   ],
 );

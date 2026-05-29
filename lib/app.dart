@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 
 import 'features/auth/providers/auth_provider.dart';
 import 'features/products/providers/products_provider.dart';
+import 'features/cart/providers/cart_provider.dart';
+
 import 'routes/app_router.dart';
 
 class MyApp extends StatelessWidget {
@@ -17,6 +19,9 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (_) => ProductsProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => CartProvider(),
         ),
       ],
       child: MaterialApp.router(
