@@ -57,6 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final productsProvider =
         context.watch<ProductsProvider>();
+    final isAdmin = context.watch<AuthProvider>().isAdmin;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -67,6 +68,10 @@ class _HomeScreenState extends State<HomeScreen> {
           drawer: isMobile
               ? _AppDrawer(
                   onLogout: logout,
+                  isAdmin: isAdmin,
+                  onAdmin: () {
+                    context.go('/admin/products');
+                  },
                 )
               : null,
           appBar: isMobile
@@ -83,6 +88,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   actions: [
+                    if (isAdmin)
+                      IconButton(
+                        tooltip: 'Admin',
+                        onPressed: () {
+                          context.push('/admin/products');
+                        },
+                        icon: const Icon(
+                          Icons.admin_panel_settings_outlined,
+                        ),
+                      ),
                     IconButton(
                       onPressed: () {
                         context.push('/cart');
@@ -99,6 +114,10 @@ class _HomeScreenState extends State<HomeScreen> {
               if (!isMobile)
                 _Sidebar(
                   onLogout: logout,
+                  isAdmin: isAdmin,
+                  onAdmin: () {
+                    context.go('/admin/products');
+                  },
                 ),
               Expanded(
                 child: SafeArea(
@@ -141,6 +160,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                       searchController,
                                   onCart: () {
                                     context.push('/cart');
+                                  },
+                                  isAdmin: isAdmin,
+                                  onAdmin: () {
+                                    context.push(
+                                      '/admin/products',
+                                    );
                                   },
                                 ),
 
@@ -234,9 +259,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
 class _AppDrawer extends StatelessWidget {
   final VoidCallback onLogout;
+  final bool isAdmin;
+  final VoidCallback onAdmin;
 
   const _AppDrawer({
     required this.onLogout,
+    required this.isAdmin,
+    required this.onAdmin,
   });
 
   @override
@@ -284,6 +313,12 @@ class _AppDrawer extends StatelessWidget {
                 icon: Icons.shopping_bag_outlined,
                 label: 'Your Orders',
               ),
+              if (isAdmin)
+                _MenuItem(
+                  icon: Icons.admin_panel_settings_outlined,
+                  label: 'Admin',
+                  onTap: onAdmin,
+                ),
               const _MenuItem(
                 icon: Icons.settings_outlined,
                 label: 'Settings',
@@ -302,9 +337,13 @@ class _AppDrawer extends StatelessWidget {
 
 class _Sidebar extends StatelessWidget {
   final VoidCallback onLogout;
+  final bool isAdmin;
+  final VoidCallback onAdmin;
 
   const _Sidebar({
     required this.onLogout,
+    required this.isAdmin,
+    required this.onAdmin,
   });
 
   @override
@@ -358,6 +397,12 @@ class _Sidebar extends StatelessWidget {
             icon: Icons.shopping_bag_outlined,
             label: 'Your Orders',
           ),
+          if (isAdmin)
+            _MenuItem(
+              icon: Icons.admin_panel_settings_outlined,
+              label: 'Admin',
+              onTap: onAdmin,
+            ),
           const _MenuItem(
             icon: Icons.local_offer_outlined,
             label: 'Coupons',
@@ -428,47 +473,57 @@ class _MenuItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final bool active;
+  final VoidCallback? onTap;
 
   const _MenuItem({
     required this.icon,
     required this.label,
     this.active = false,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 14,
-      ),
-      decoration: BoxDecoration(
-        gradient: active
-            ? const LinearGradient(
-                colors: [
-                  Color(0xFF8B35FF),
-                  Color(0xFF5A18D6),
-                ],
-              )
-            : null,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            color: Colors.white,
+    return MouseRegion(
+      cursor: onTap == null
+          ? MouseCursor.defer
+          : SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
           ),
-          const SizedBox(width: 12),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-            ),
+          decoration: BoxDecoration(
+            gradient: active
+                ? const LinearGradient(
+                    colors: [
+                      Color(0xFF8B35FF),
+                      Color(0xFF5A18D6),
+                    ],
+                  )
+                : null,
+            borderRadius: BorderRadius.circular(14),
           ),
-        ],
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                color: Colors.white,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -477,10 +532,14 @@ class _MenuItem extends StatelessWidget {
 class _Header extends StatelessWidget {
   final TextEditingController searchController;
   final VoidCallback onCart;
+  final bool isAdmin;
+  final VoidCallback onAdmin;
 
   const _Header({
     required this.searchController,
     required this.onCart,
+    required this.isAdmin,
+    required this.onAdmin,
   });
 
   @override
@@ -518,6 +577,13 @@ class _Header extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 22),
+        if (isAdmin) ...[
+          _TopIconButton(
+            icon: Icons.admin_panel_settings_outlined,
+            onTap: onAdmin,
+          ),
+          const SizedBox(width: 14),
+        ],
         _TopIconButton(
           icon: Icons.shopping_cart_outlined,
           badge: '3',
@@ -543,6 +609,7 @@ class _Header extends StatelessWidget {
     );
   }
 }
+
 
 class _MobileSearch extends StatelessWidget {
   final TextEditingController controller;
