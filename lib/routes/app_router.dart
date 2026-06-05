@@ -11,6 +11,7 @@ import '../features/products/screens/home_screen.dart';
 import '../features/cart/screens/cart_screen.dart';
 
 import '../features/checkout/screens/checkout_screen.dart';
+import '../features/orders/screens/my_orders_screen.dart';
 import '../features/admin_products/screens/admin_categories_screen.dart';
 import '../features/admin_products/screens/admin_product_create_screen.dart';
 import '../features/admin_products/screens/admin_products_screen.dart';
@@ -48,7 +49,18 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/checkout',
 
-      builder: (context, state) => const CheckoutScreen(),
+      builder: (context, state) => CheckoutScreen(
+        orderId: state.uri.queryParameters['orderId'],
+        paypalOrderId:
+            state.uri.queryParameters['paypalOrderId'] ??
+            state.uri.queryParameters['token'],
+      ),
+    ),
+
+    GoRoute(
+      path: '/orders',
+
+      builder: (context, state) => const MyOrdersScreen(),
     ),
 
     GoRoute(

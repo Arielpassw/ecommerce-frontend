@@ -7,7 +7,14 @@ import '../../orders/services/orders_service.dart';
 import '../../payments/services/payments_service.dart';
 
 class CheckoutScreen extends StatefulWidget {
-  const CheckoutScreen({super.key});
+  final String? orderId;
+  final String? paypalOrderId;
+
+  const CheckoutScreen({
+    super.key,
+    this.orderId,
+    this.paypalOrderId,
+  });
 
   @override
   State<CheckoutScreen> createState() =>
@@ -20,11 +27,39 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   bool isLoading = false;
   OrderModel? order;
+  bool _paypalDialogShown = false;
 
   @override
   void initState() {
     super.initState();
-    createOrder();
+
+    if (widget.orderId == null) {
+      createOrder();
+    } else {
+      loadExistingOrder(widget.orderId!);
+    }
+  }
+
+  Future<void> loadExistingOrder(String orderId) async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final existingOrder = await ordersService.getOrderById(orderId);
+
+      setState(() {
+        order = existingOrder;
+      });
+
+      _showPaypalDialogFromRedirect();
+    } catch (e) {
+      showError(e.toString());
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   Future<void> createOrder() async {
@@ -99,53 +134,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
       if (!mounted) return;
 
-      showDialog(
-        context: context,
-        builder: (_) {
-          return AlertDialog(
-            backgroundColor: const Color(0xFF0D101A),
-            title: const Text(
-              'Pago PayPal',
-              style: TextStyle(color: Colors.white),
-            ),
-            content: const Text(
-              'After approving the payments payment on PayPal, return here and press Confirm Patment.',
-              style: TextStyle(color: Colors.white70),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  Navigator.pop(context);
-
-                  await paymentsService.capturePaypalOrder(
-                    paypalOrderId: paypalOrderId,
-                    orderId: order!.id,
-                  );
-
-                  if (!mounted) return;
-
-                  ScaffoldMessenger.of(context)
-                      .showSnackBar(
-                    const SnackBar(
-                      backgroundColor: Color(0xFF7C3CFF),
-                      content: Text(
-                        'PayPal payment confirmed',
-                      ),
-                    ),
-                  );
-                },
-                child: const Text('Confirmed payment'),
-              ),
-            ],
-          );
-        },
-      );
+      showPaypalConfirmationDialog(paypalOrderId);
     } catch (e) {
       showError(e.toString());
     } finally {
@@ -156,12 +145,81 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   void showError(String message) {
+    final readableMessage = _readableError(message);
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         backgroundColor: Colors.redAccent,
-        content: Text(message),
+        content: Text(readableMessage),
       ),
     );
+  }
+
+  void _showPaypalDialogFromRedirect() {
+    if (_paypalDialogShown || widget.paypalOrderId == null) return;
+
+    _paypalDialogShown = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || order == null) return;
+
+      showPaypalConfirmationDialog(widget.paypalOrderId!);
+    });
+  }
+
+  void showPaypalConfirmationDialog(String paypalOrderId) {
+    showDialog(
+      context: context,
+      builder: (_) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF0D101A),
+          title: const Text(
+            'Pago PayPal',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: const Text(
+            'PayPal ya aprobo el pago. Presiona Confirmed payment para finalizarlo en tu ecommerce.',
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(context);
+
+                await paymentsService.capturePaypalOrder(
+                  paypalOrderId: paypalOrderId,
+                  orderId: order!.id,
+                );
+
+                if (!mounted) return;
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    backgroundColor: Color(0xFF7C3CFF),
+                    content: Text('PayPal payment confirmed'),
+                  ),
+                );
+              },
+              child: const Text('Confirmed payment'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  String _readableError(String message) {
+    if (!message.contains('DioException')) {
+      return message;
+    }
+
+    return 'No se pudo procesar el pago. Revisa la configuracion del metodo de pago e intenta nuevamente.';
   }
 
   @override

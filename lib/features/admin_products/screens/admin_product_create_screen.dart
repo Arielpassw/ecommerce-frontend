@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../models/admin_category_model.dart';
 import '../services/admin_category_service.dart';
 import '../services/admin_product_service.dart';
+import '../widgets/admin_theme.dart';
 
 class AdminProductCreateScreen extends StatefulWidget {
   const AdminProductCreateScreen({super.key});
@@ -67,7 +68,7 @@ class _AdminProductCreateScreenState extends State<AdminProductCreateScreen> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedCategoryId == null) {
-      _showMessage('Create a category first');
+      _showMessage('Crea una categoria primero');
       return;
     }
 
@@ -106,135 +107,164 @@ class _AdminProductCreateScreenState extends State<AdminProductCreateScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create product'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/admin/products'),
-        ),
-        actions: [
-          IconButton(
-            tooltip: 'Home',
-            icon: const Icon(Icons.home_outlined),
-            onPressed: () => context.go('/home'),
-          ),
-        ],
+    return AdminPageShell(
+      title: 'Crear producto',
+      subtitle: 'Agrega un producto nuevo al catalogo de la tienda.',
+      icon: Icons.add_box_outlined,
+      leading: IconButton(
+        tooltip: 'Volver',
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () => context.go('/admin/products'),
       ),
-      body: Center(
+      actions: [
+        IconButton(
+          tooltip: 'Inicio',
+          icon: const Icon(Icons.home_outlined),
+          onPressed: () => context.go('/home'),
+        ),
+        const SizedBox(width: 8),
+      ],
+      child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720),
-          child: Form(
-            key: _formKey,
-            child: ListView(
-              padding: const EdgeInsets.all(20),
-              children: [
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Name',
-                    border: OutlineInputBorder(),
+          constraints: const BoxConstraints(maxWidth: 780),
+          child: AdminPanel(
+            padding: const EdgeInsets.all(22),
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                children: [
+                  const Text(
+                    'Informacion del producto',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  validator: _required,
-                ),
-                const SizedBox(height: 14),
-                TextFormField(
-                  controller: _descriptionController,
-                  decoration: const InputDecoration(
-                    labelText: 'Description',
-                    border: OutlineInputBorder(),
+                  const SizedBox(height: 18),
+                  _AdminFormField(
+                    controller: _nameController,
+                    label: 'Nombre',
+                    icon: Icons.inventory_2_outlined,
+                    validator: _required,
                   ),
-                  maxLines: 3,
-                  validator: _required,
-                ),
-                const SizedBox(height: 14),
-                DropdownButtonFormField<String>(
-                  value: _selectedCategoryId,
-                  decoration: const InputDecoration(
-                    labelText: 'Category',
-                    border: OutlineInputBorder(),
+                  _AdminFormField(
+                    controller: _descriptionController,
+                    label: 'Descripcion',
+                    icon: Icons.notes_outlined,
+                    maxLines: 3,
+                    validator: _required,
                   ),
-                  items: _categories
-                      .map(
-                        (category) => DropdownMenuItem(
-                          value: category.id,
-                          child: Text(category.name),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    setState(() => _selectedCategoryId = value);
-                  },
-                  validator: (value) => value == null ? 'Required field' : null,
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
+                  DropdownButtonFormField<String>(
+                    value: _selectedCategoryId,
+                    dropdownColor: AdminColors.surfaceAlt,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: adminInputDecoration(
+                      'Categoria',
+                      icon: Icons.category_outlined,
+                    ),
+                    items: _categories
+                        .map(
+                          (category) => DropdownMenuItem(
+                            value: category.id,
+                            child: Text(category.name),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      setState(() => _selectedCategoryId = value);
+                    },
+                    validator: (value) =>
+                        value == null ? 'Campo obligatorio' : null,
+                  ),
+                  const SizedBox(height: 14),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isCompact = constraints.maxWidth < 560;
+                      final price = _AdminFormField(
                         controller: _priceController,
-                        decoration: const InputDecoration(
-                          labelText: 'Price',
-                          border: OutlineInputBorder(),
-                        ),
+                        label: 'Precio',
+                        icon: Icons.attach_money,
                         keyboardType: TextInputType.number,
                         validator: _numberRequired,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextFormField(
+                      );
+                      final stock = _AdminFormField(
                         controller: _stockController,
-                        decoration: const InputDecoration(
-                          labelText: 'Stock',
-                          border: OutlineInputBorder(),
-                        ),
+                        label: 'Stock',
+                        icon: Icons.warehouse_outlined,
                         keyboardType: TextInputType.number,
                         validator: _integerRequired,
-                      ),
+                      );
+
+                      if (isCompact) {
+                        return Column(children: [price, stock]);
+                      }
+
+                      return Row(
+                        children: [
+                          Expanded(child: price),
+                          const SizedBox(width: 12),
+                          Expanded(child: stock),
+                        ],
+                      );
+                    },
+                  ),
+                  _AdminFormField(
+                    controller: _imageUrlController,
+                    label: 'Imagen URL',
+                    icon: Icons.image_outlined,
+                  ),
+                  _AdminFormField(
+                    controller: _discountController,
+                    label: 'Descuento',
+                    icon: Icons.local_offer_outlined,
+                    keyboardType: TextInputType.number,
+                    validator: _optionalNumber,
+                  ),
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 18),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 4,
                     ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                TextFormField(
-                  controller: _imageUrlController,
-                  decoration: const InputDecoration(
-                    labelText: 'Image URL',
-                    border: OutlineInputBorder(),
+                    decoration: BoxDecoration(
+                      color: AdminColors.surfaceAlt,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AdminColors.border),
+                    ),
+                    child: SwitchListTile(
+                      value: _isFeatured,
+                      activeColor: AdminColors.accent,
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text(
+                        'Producto destacado',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      onChanged: (value) {
+                        setState(() => _isFeatured = value);
+                      },
+                    ),
                   ),
-                ),
-                const SizedBox(height: 14),
-                TextFormField(
-                  controller: _discountController,
-                  decoration: const InputDecoration(
-                    labelText: 'Discount',
-                    border: OutlineInputBorder(),
+                  FilledButton.icon(
+                    style: adminFilledButtonStyle(),
+                    onPressed: _isLoading ? null : _save,
+                    icon: _isLoading
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.save_outlined),
+                    label: const Text('Guardar producto'),
                   ),
-                  keyboardType: TextInputType.number,
-                  validator: _optionalNumber,
-                ),
-                const SizedBox(height: 8),
-                SwitchListTile(
-                  value: _isFeatured,
-                  title: const Text('Featured product'),
-                  contentPadding: EdgeInsets.zero,
-                  onChanged: (value) {
-                    setState(() => _isFeatured = value);
-                  },
-                ),
-                const SizedBox(height: 20),
-                FilledButton.icon(
-                  onPressed: _isLoading ? null : _save,
-                  icon: _isLoading
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.save),
-                  label: const Text('Save product'),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -244,7 +274,7 @@ class _AdminProductCreateScreenState extends State<AdminProductCreateScreen> {
 
   String? _required(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Required field';
+      return 'Campo obligatorio';
     }
 
     return null;
@@ -254,19 +284,52 @@ class _AdminProductCreateScreenState extends State<AdminProductCreateScreen> {
     final message = _required(value);
     if (message != null) return message;
 
-    return double.tryParse(value!.trim()) == null ? 'Invalid number' : null;
+    return double.tryParse(value!.trim()) == null ? 'Numero invalido' : null;
   }
 
   String? _integerRequired(String? value) {
     final message = _required(value);
     if (message != null) return message;
 
-    return int.tryParse(value!.trim()) == null ? 'Invalid number' : null;
+    return int.tryParse(value!.trim()) == null ? 'Numero invalido' : null;
   }
 
   String? _optionalNumber(String? value) {
     if (value == null || value.trim().isEmpty) return null;
 
-    return double.tryParse(value.trim()) == null ? 'Invalid number' : null;
+    return double.tryParse(value.trim()) == null ? 'Numero invalido' : null;
+  }
+}
+
+class _AdminFormField extends StatelessWidget {
+  final TextEditingController controller;
+  final String label;
+  final IconData icon;
+  final TextInputType? keyboardType;
+  final String? Function(String?)? validator;
+  final int maxLines;
+
+  const _AdminFormField({
+    required this.controller,
+    required this.label,
+    required this.icon,
+    this.keyboardType,
+    this.validator,
+    this.maxLines = 1,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: TextFormField(
+        controller: controller,
+        style: const TextStyle(color: Colors.white),
+        keyboardType: keyboardType,
+        maxLines: maxLines,
+        validator: validator,
+        decoration: adminInputDecoration(label, icon: icon),
+      ),
+    );
   }
 }

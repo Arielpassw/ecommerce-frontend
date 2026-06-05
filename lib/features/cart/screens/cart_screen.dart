@@ -38,7 +38,11 @@ class _CartScreenState extends State<CartScreen> {
                 _CartHeader(
                   itemCount: cartProvider.items.length,
                   onBack: () {
-                    context.pop();
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go('/home');
+                    }
                   },
                 ),
 
@@ -94,16 +98,31 @@ class _CartScreenState extends State<CartScreen> {
                                       itemBuilder: (context, index) {
                                         final item =
                                             cartProvider.items[index];
+                                        final cartItemId = item.id;
+                                        final quantity = item.quantity;
 
                                         return _CartItemCard(
+                                          key: ValueKey(cartItemId),
                                           imageUrl:
                                               item.product.imageUrl,
                                           name: item.product.name,
                                           price: item.product.price,
-                                          quantity: item.quantity,
+                                          quantity: quantity,
+                                          onDecrease: () {
+                                            cartProvider.updateQuantity(
+                                              cartItemId: cartItemId,
+                                              quantity: quantity - 1,
+                                            );
+                                          },
+                                          onIncrease: () {
+                                            cartProvider.updateQuantity(
+                                              cartItemId: cartItemId,
+                                              quantity: quantity + 1,
+                                            );
+                                          },
                                           onDelete: () {
                                             cartProvider.removeItem(
-                                              item.id,
+                                              cartItemId,
                                             );
                                           },
                                         );
@@ -292,13 +311,18 @@ class _CartItemCard extends StatelessWidget {
   final String name;
   final double price;
   final int quantity;
+  final VoidCallback onDecrease;
+  final VoidCallback onIncrease;
   final VoidCallback onDelete;
 
   const _CartItemCard({
+    super.key,
     required this.imageUrl,
     required this.name,
     required this.price,
     required this.quantity,
+    required this.onDecrease,
+    required this.onIncrease,
     required this.onDelete,
   });
 
@@ -384,9 +408,13 @@ class _CartItemCard extends StatelessWidget {
                     mainAxisAlignment:
                         MainAxisAlignment.spaceAround,
                     children: [
-                      const Icon(
-                        Icons.remove,
-                        color: Color(0xFFB14CFF),
+                      IconButton(
+                        tooltip: 'Disminuir',
+                        onPressed: onDecrease,
+                        icon: const Icon(
+                          Icons.remove,
+                          color: Color(0xFFB14CFF),
+                        ),
                       ),
                       Text(
                         quantity.toString(),
@@ -396,9 +424,13 @@ class _CartItemCard extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const Icon(
-                        Icons.add,
-                        color: Color(0xFFB14CFF),
+                      IconButton(
+                        tooltip: 'Aumentar',
+                        onPressed: onIncrease,
+                        icon: const Icon(
+                          Icons.add,
+                          color: Color(0xFFB14CFF),
+                        ),
                       ),
                     ],
                   ),

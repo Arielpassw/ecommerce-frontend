@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../models/admin_category_model.dart';
 import '../services/admin_category_service.dart';
+import '../widgets/admin_theme.dart';
 
 class AdminCategoriesScreen extends StatefulWidget {
   const AdminCategoriesScreen({super.key});
@@ -57,7 +58,7 @@ class _AdminCategoriesScreenState extends State<AdminCategoriesScreen> {
     final description = _descriptionController.text.trim();
 
     if (name.isEmpty) {
-      _showMessage('Name is required');
+      _showMessage('El nombre es obligatorio');
       return;
     }
 
@@ -91,16 +92,25 @@ class _AdminCategoriesScreenState extends State<AdminCategoriesScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete category'),
-        content: Text('Delete ${category.name}?'),
+        backgroundColor: AdminColors.surface,
+        title: const Text(
+          'Eliminar categoria',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Text(
+          'Eliminar ${category.name}?',
+          style: const TextStyle(color: AdminColors.muted),
+        ),
         actions: [
           TextButton(
+            style: adminTextButtonStyle(),
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: const Text('Cancelar'),
           ),
           FilledButton(
+            style: adminFilledButtonStyle(),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: const Text('Eliminar'),
           ),
         ],
       ),
@@ -140,68 +150,65 @@ class _AdminCategoriesScreenState extends State<AdminCategoriesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Admin categories'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/admin/products'),
-        ),
-        actions: [
-          IconButton(
-            tooltip: 'Home',
-            icon: const Icon(Icons.home_outlined),
-            onPressed: () => context.go('/home'),
-          ),
-          IconButton(
-            tooltip: 'Refresh',
-            icon: const Icon(Icons.refresh),
-            onPressed: _load,
-          ),
-        ],
+    return AdminPageShell(
+      title: 'Categorias',
+      subtitle: 'Organiza las categorias que se muestran en la tienda.',
+      icon: Icons.category_outlined,
+      leading: IconButton(
+        tooltip: 'Volver',
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () => context.go('/admin/products'),
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 980),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final isWide = constraints.maxWidth >= 760;
-              final form = _CategoryForm(
-                nameController: _nameController,
-                descriptionController: _descriptionController,
-                isSaving: _isSaving,
-                isEditing: _editingCategory != null,
-                onSave: _save,
-                onCancel: _clearForm,
-              );
-              final list = _CategoryList(
-                isLoading: _isLoading,
-                categories: _categories,
-                onEdit: _startEdit,
-                onDelete: _delete,
-              );
-
-              if (isWide) {
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(width: 360, child: form),
-                    const VerticalDivider(width: 1),
-                    Expanded(child: list),
-                  ],
-                );
-              }
-
-              return ListView(
-                children: [
-                  form,
-                  const Divider(height: 1),
-                  SizedBox(height: 520, child: list),
-                ],
-              );
-            },
-          ),
+      actions: [
+        IconButton(
+          tooltip: 'Inicio',
+          icon: const Icon(Icons.home_outlined),
+          onPressed: () => context.go('/home'),
         ),
+        IconButton(
+          tooltip: 'Actualizar',
+          icon: const Icon(Icons.refresh),
+          onPressed: _load,
+        ),
+        const SizedBox(width: 8),
+      ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth >= 820;
+          final form = _CategoryForm(
+            nameController: _nameController,
+            descriptionController: _descriptionController,
+            isSaving: _isSaving,
+            isEditing: _editingCategory != null,
+            onSave: _save,
+            onCancel: _clearForm,
+          );
+          final list = _CategoryList(
+            isLoading: _isLoading,
+            categories: _categories,
+            onEdit: _startEdit,
+            onDelete: _delete,
+          );
+
+          if (isWide) {
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(width: 380, child: form),
+                const SizedBox(width: 18),
+                Expanded(child: list),
+              ],
+            );
+          }
+
+          return ListView(
+            children: [
+              form,
+              const SizedBox(height: 16),
+              SizedBox(height: 520, child: list),
+            ],
+          );
+        },
       ),
     );
   }
@@ -226,44 +233,76 @@ class _CategoryForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
+    return AdminPanel(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            isEditing ? 'Edit category' : 'Create category',
-            style: Theme.of(context).textTheme.titleLarge,
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: AdminColors.primary.withOpacity(0.14),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  isEditing ? Icons.edit_outlined : Icons.add_box_outlined,
+                  color: AdminColors.accent,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  isEditing ? 'Editar categoria' : 'Nueva categoria',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 19,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
           TextField(
             controller: nameController,
-            decoration: const InputDecoration(
-              labelText: 'Name',
-              border: OutlineInputBorder(),
-            ),
+            style: const TextStyle(color: Colors.white),
+            decoration: adminInputDecoration('Nombre', icon: Icons.sell),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: descriptionController,
-            decoration: const InputDecoration(
-              labelText: 'Description',
-              border: OutlineInputBorder(),
+            style: const TextStyle(color: Colors.white),
+            decoration: adminInputDecoration(
+              'Descripcion',
+              icon: Icons.notes_outlined,
             ),
             maxLines: 3,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
           FilledButton.icon(
+            style: adminFilledButtonStyle(),
             onPressed: isSaving ? null : onSave,
-            icon: const Icon(Icons.save),
-            label: Text(isEditing ? 'Update' : 'Create'),
+            icon: isSaving
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Icon(Icons.save_outlined),
+            label: Text(isEditing ? 'Actualizar' : 'Crear'),
           ),
           if (isEditing) ...[
             const SizedBox(height: 8),
             TextButton(
+              style: adminTextButtonStyle(),
               onPressed: isSaving ? null : onCancel,
-              child: const Text('Cancel edit'),
+              child: const Text('Cancelar edicion'),
             ),
           ],
         ],
@@ -287,43 +326,137 @@ class _CategoryList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (categories.isEmpty) {
-      return const Center(child: Text('No categories yet'));
-    }
-
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: categories.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 10),
-      itemBuilder: (context, index) {
-        final category = categories[index];
-
-        return Card(
-          child: ListTile(
-            title: Text(category.name),
-            subtitle: Text(category.description ?? 'No description'),
-            trailing: Wrap(
-              spacing: 4,
+    return AdminPanel(
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 10),
+            child: Row(
               children: [
-                IconButton(
-                  tooltip: 'Edit',
-                  icon: const Icon(Icons.edit),
-                  onPressed: () => onEdit(category),
+                const Expanded(
+                  child: Text(
+                    'Listado',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 19,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
-                IconButton(
-                  tooltip: 'Delete',
-                  icon: const Icon(Icons.delete),
-                  onPressed: () => onDelete(category),
-                ),
+                _CountPill(count: categories.length),
               ],
             ),
           ),
-        );
-      },
+          Expanded(
+            child: Builder(
+              builder: (context) {
+                if (isLoading) {
+                  return const Center(
+                    child: CircularProgressIndicator(
+                      color: AdminColors.accent,
+                    ),
+                  );
+                }
+
+                if (categories.isEmpty) {
+                  return const EmptyAdminState(
+                    icon: Icons.category_outlined,
+                    title: 'Sin categorias',
+                  );
+                }
+
+                return ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(14, 8, 14, 14),
+                  itemCount: categories.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  itemBuilder: (context, index) {
+                    final category = categories[index];
+
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: AdminColors.surfaceAlt,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AdminColors.border),
+                      ),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        leading: CircleAvatar(
+                          backgroundColor: AdminColors.primary.withOpacity(
+                            0.18,
+                          ),
+                          child: const Icon(
+                            Icons.inventory_2_outlined,
+                            color: AdminColors.accent,
+                          ),
+                        ),
+                        title: Text(
+                          category.name,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        subtitle: Text(
+                          category.description ?? 'Sin descripcion',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(color: AdminColors.muted),
+                        ),
+                        trailing: Wrap(
+                          spacing: 4,
+                          children: [
+                            IconButton(
+                              tooltip: 'Editar',
+                              color: Colors.white,
+                              icon: const Icon(Icons.edit_outlined),
+                              onPressed: () => onEdit(category),
+                            ),
+                            IconButton(
+                              tooltip: 'Eliminar',
+                              color: Colors.redAccent,
+                              icon: const Icon(Icons.delete_outline),
+                              onPressed: () => onDelete(category),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CountPill extends StatelessWidget {
+  final int count;
+
+  const _CountPill({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: AdminColors.primary.withOpacity(0.13),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AdminColors.border),
+      ),
+      child: Text(
+        '$count',
+        style: const TextStyle(
+          color: AdminColors.accent,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 }

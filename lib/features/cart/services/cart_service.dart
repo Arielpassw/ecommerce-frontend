@@ -59,6 +59,19 @@ class CartService {
     );
   }
 
+  Future<void> updateItemQuantity({
+    required String cartItemId,
+    required int quantity,
+  }) async {
+    await dio.patch(
+      '/cart/item/$cartItemId',
+      data: {
+        'quantity': quantity,
+      },
+      options: await _authHeaders(),
+    );
+  }
+
   Future<void> clearCart() async {
     await dio.delete(
       '/cart/clear',

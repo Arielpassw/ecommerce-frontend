@@ -25,4 +25,24 @@ class OrdersService {
 
     return OrderModel.fromJson(response.data);
   }
+
+  Future<OrderModel> getOrderById(String orderId) async {
+    final response = await dio.get(
+      '/orders/$orderId',
+      options: await _authHeaders(),
+    );
+
+    return OrderModel.fromJson(response.data);
+  }
+
+  Future<List<OrderModel>> getMyOrders() async {
+    final response = await dio.get(
+      '/orders/my-orders',
+      options: await _authHeaders(),
+    );
+
+    final List data = response.data;
+
+    return data.map((item) => OrderModel.fromJson(item)).toList();
+  }
 }

@@ -9,6 +9,16 @@ class CartItemModel {
     required this.product,
   });
 
+  CartItemModel copyWith({
+    int? quantity,
+  }) {
+    return CartItemModel(
+      id: id,
+      quantity: quantity ?? this.quantity,
+      product: product,
+    );
+  }
+
   factory CartItemModel.fromJson(
     Map<String, dynamic> json,
   ) {
